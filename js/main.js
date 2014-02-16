@@ -1,6 +1,12 @@
-    var _map;
+    var _map = null;
     var groupMap[];
-    var boolIFail=false;
+    var _llbounds = null;
+    var _seconds = 30;
+    var oldLatLng = "";
+    var myLatLng;
+    var oldGroupMap = null;
+	var boolTripTrack=true;  
+
     
     //replace with for loop in universal implementation
     var groupMap = [
@@ -16,16 +22,13 @@
     var groupMarkers[];
 
     //40.7655,-73.97204 = NYC
-    var currentLatitude = "40.7655";
-    var currentLongitude = "-73.97204";
+    var currentLatitude = "40.711568";
+    var currentLongitude = "-73.010006";
     if (groupMap[0].id == "id0"){
         currentLatitude = groupMap[0].latitude;  // "my" initial position (arbitrary; will be updated immediately)
         currentLongitude = groupMap[0].longitude;
     }
     
-    
-
-	var boolTripTrack=true;  
 
     //Create the google Maps and LatLng object 
     function drawMap()
@@ -44,16 +47,18 @@
             },
         };
         
-        if (boolTripTrack) //flag to determine whether map updates at a certain time
+        if (boolTripTrack==true) //flag to determine whether map updates at a certain time
         {
             _map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+            oldGroupMap = keepGroup();
             drawGroup();
         }
+        boolTripTrack = false //-------------------------------------------------------
         //send message to server with my ID, latlng position, and a timestamp
     }
     
     function drawGroup(){
-        for (int i=0; i<groupMap.length; i++){
+        for (int i=1; i<groupMap.length; i++){
             iLatLng = new google.maps.LatLng(groupMap[i].latitude,groupMap[i].longitude);
             groupMarkers[i]=new Marker{
                 position: iLatLng,
@@ -62,6 +67,18 @@
             }        
         }
     }
+        
+    function eraseGroup(){
+        for (int i=0; i<groupMap.length;i++){
+            groupMap[i].setMap(null);
+        }
+    }
+        
+    var keepGroup = function() {
+        for (int i = 0; i<groupMap.length;i++){
+            keepGroup[i] = groupMap[i];
+        }
+    };
     
     var options = {
 					 timeout: 10000,
@@ -84,12 +101,12 @@
         }
         
         
-        /*//Creates a new google maps marker object for using with the pins
-        if((myLatLng.toString().localeCompare(oldLatLng.toString())) != 0){
+        //Creates a new google maps marker object for using with the pins
+        if((myLatLng.toString().localeCompare(oldLatLng.toString())) != 0){ //---------------------------------------
             //Create a new map marker
             var Marker = new google.maps.Marker({
               position: myLatLng,
-              map: _map
+              map: _map,
             });
             
             if( _llbounds == null ){
@@ -99,10 +116,10 @@
             else{
                 //Extends geographical coordinates rectangle to cover current position
                 _llbounds.moveTo(myLatLng);
-            }*/
+            }
             
             //Sets the viewport to contain the given bounds & triggers the "zoom_changed" event
-            //map.fitBounds(_llbounds);
+            map.fitBounds(_llbounds);
            
         }
         oldLatLng = myLatLng;
@@ -111,14 +128,14 @@
 	var fail = function(){
         currentLatitude=groupMap[0].latitude;
         currentLongitude=groupMap[0].longitude;
-        drawMap();
+        drawMap(); //-----------------------------------------------------------------
 		console.log("Geolocation failed. \nPlease enable GPS in Settings.",1);
 	};
 
     var getLocation = function()
     {
         console.log("in getLocation",4);
-    }
+    };
 
     
     //Execute when the DOM loads
@@ -130,8 +147,8 @@
         {
             if (intel.xdk.device.platform.indexOf("Android")!=-1)
             {
-                intel.xdk.display.useViewport(720,1280);
-                document.getElementById("map_canvas").style.width="360";
+                intel.xdk.display.useViewport(480,480);
+                document.getElementById("map_canvas").style.width="480px";
             }
             else if (intel.xdk.device.platform.indexOf("iOS")!=-1)
             {
@@ -156,7 +173,7 @@
 			if (intel.xdk.geolocation != null)
 			{
 				document.getElementById("map_canvas").style.height = screen.height + "px";
-                //was previously watchPosition 
+                //------------------------getCurrentPosition? 
 				intel.xdk.geolocation.watchPosition(suc,fail,options);
 			}
         }
